@@ -1056,7 +1056,7 @@ footer {
       </div>
       <div class="form-group">
         <label>I am a</label>
-        <select>
+        <select id="ea-role">
           <option value="">Select Role</option>
           <option>Exporter</option>
           <option>Importer</option>
@@ -1299,49 +1299,56 @@ async function submitToSheet(data) {
 // Early Access Form Handler
 async function handleEarlyAccess() {
   const btn = document.querySelector('.btn-submit');
-  const company = document.getElementById('ea-company').value.trim();
-  const contact = document.getElementById('ea-contact').value.trim();
-  const country = document.getElementById('ea-country').value.trim();
-  const email = document.getElementById('ea-email').value.trim();
-  const phone = document.getElementById('ea-phone').value.trim();
-  const role = document.getElementById('ea-role').value.trim();
-  const category = document.getElementById('ea-category').value.trim();
+  
+  try {
+    const company  = document.getElementById('ea-company')  ? document.getElementById('ea-company').value.trim()  : '';
+    const contact  = document.getElementById('ea-contact')  ? document.getElementById('ea-contact').value.trim()  : '';
+    const country  = document.getElementById('ea-country')  ? document.getElementById('ea-country').value.trim()  : '';
+    const email    = document.getElementById('ea-email')    ? document.getElementById('ea-email').value.trim()    : '';
+    const phone    = document.getElementById('ea-phone')    ? document.getElementById('ea-phone').value.trim()    : '';
+    const roleEl   = document.getElementById('ea-role');
+    const role     = roleEl ? roleEl.value.trim() : '';
+    const category = document.getElementById('ea-category') ? document.getElementById('ea-category').value.trim() : '';
 
-  // Basic validation
-  if (!company || !email) {
-    alert('Please fill in at least Company Name and Email.');
-    return;
+    if (!company || !email) {
+      alert('Please fill in at least Company Name and Email.');
+      return;
+    }
+
+    btn.textContent = 'Submitting…';
+    btn.disabled = true;
+
+    const data = {
+      companyName:     company,
+      contactPerson:   contact,
+      country:         country,
+      email:           email,
+      phone:           phone,
+      role:            role,
+      productCategory: category,
+      source:          'Early Access Form'
+    };
+
+    await submitToSheet(data);
+
+    btn.textContent = 'Request Early Access →';
+    btn.disabled = false;
+    document.getElementById('earlySuccess').style.display = 'block';
+
+    ['ea-company','ea-contact','ea-country','ea-email','ea-phone','ea-category'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    if (roleEl) roleEl.selectedIndex = 0;
+
+    setTimeout(() => document.getElementById('earlySuccess').style.display = 'none', 6000);
+
+  } catch(err) {
+    console.error('Form error:', err);
+    btn.textContent = 'Request Early Access →';
+    btn.disabled = false;
+    alert('Something went wrong. Please try again.');
   }
-
-  // Show loading state
-  btn.textContent = 'Submitting…';
-  btn.disabled = true;
-
-  const data = {
-    companyName: company,
-    contactPerson: contact,
-    country: country,
-    email: email,
-    phone: phone,
-    role: role,
-    productCategory: category,
-    source: 'Early Access Form'
-  };
-
-  await submitToSheet(data);
-
-  // Show success
-  btn.textContent = 'Request Early Access →';
-  btn.disabled = false;
-  document.getElementById('earlySuccess').style.display = 'block';
-
-  // Clear form
-  ['ea-company','ea-contact','ea-country','ea-email','ea-phone','ea-category'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('ea-role').selectedIndex = 0;
-
-  setTimeout(() => document.getElementById('earlySuccess').style.display = 'none', 6000);
 }
 
 // Contact Form Handler
