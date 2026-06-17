@@ -1036,23 +1036,23 @@ footer {
     <div class="form-grid" id="earlyForm">
       <div class="form-group">
         <label>Company Name</label>
-        <input type="text" placeholder="Acme Exports Pvt. Ltd.">
+        <input type="text" id="ea-company" placeholder="Acme Exports Pvt. Ltd.">
       </div>
       <div class="form-group">
         <label>Contact Person</label>
-        <input type="text" placeholder="Full Name">
+        <input type="text" id="ea-contact" placeholder="Full Name">
       </div>
       <div class="form-group">
         <label>Country</label>
-        <input type="text" placeholder="India">
+        <input type="text" id="ea-country" placeholder="India">
       </div>
       <div class="form-group">
         <label>Email Address</label>
-        <input type="email" placeholder="you@company.com">
+        <input type="email" id="ea-email" placeholder="you@company.com">
       </div>
       <div class="form-group">
         <label>Phone</label>
-        <input type="tel" placeholder="+91 98765 43210">
+        <input type="tel" id="ea-phone" placeholder="+91 98765 43210">
       </div>
       <div class="form-group">
         <label>I am a</label>
@@ -1065,7 +1065,7 @@ footer {
       </div>
       <div class="form-group form-full">
         <label>Product Category</label>
-        <input type="text" placeholder="e.g. Spices, Textiles, FMCG, Agriculture…">
+        <input type="text" id="ea-category" placeholder="e.g. Spices, Textiles, FMCG, Agriculture…">
       </div>
     </div>
     <button class="btn-submit" onclick="handleEarlyAccess()">Request Early Access →</button>
@@ -1165,27 +1165,27 @@ footer {
       <div class="contact-form-grid">
         <div class="light-group">
           <label>Your Name</label>
-          <input type="text" placeholder="Full Name">
+          <input type="text" id="ct-name" placeholder="Full Name">
         </div>
         <div class="light-group">
           <label>Company</label>
-          <input type="text" placeholder="Company Name">
+          <input type="text" id="ct-company" placeholder="Company Name">
         </div>
         <div class="light-group">
           <label>Email</label>
-          <input type="email" placeholder="email@company.com">
+          <input type="email" id="ct-email" placeholder="email@company.com">
         </div>
         <div class="light-group">
           <label>Phone</label>
-          <input type="tel" placeholder="+91 …">
+          <input type="tel" id="ct-phone" placeholder="+91 …">
         </div>
         <div class="light-group">
           <label>Country</label>
-          <input type="text" placeholder="Country">
+          <input type="text" id="ct-country" placeholder="Country">
         </div>
         <div class="light-group">
           <label>Enquiry Type</label>
-          <select>
+          <select id="ct-enquiry">
             <option>Business Enquiry</option>
             <option>Partnership</option>
             <option>Investor Relations</option>
@@ -1194,7 +1194,7 @@ footer {
         </div>
         <div class="light-group light-full">
           <label>Message</label>
-          <textarea rows="4" placeholder="Tell us how we can help…"></textarea>
+          <textarea rows="4" id="ct-message" placeholder="Tell us how we can help…"></textarea>
         </div>
       </div>
       <button class="btn-contact" onclick="handleContact()">Send Message →</button>
@@ -1278,15 +1278,117 @@ document.querySelectorAll('.problem-grid, .solution-features, .why-grid, .steps-
   });
 });
 
-// Form handlers
-function handleEarlyAccess() {
-  document.getElementById('earlySuccess').style.display = 'block';
-  setTimeout(() => document.getElementById('earlySuccess').style.display = 'none', 5000);
+// Google Sheets integration
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwlrgMBUN1Ic4RYbQDAaMObd-202TT9DHzBn-eNFYgbBLClg9wYxH_slKYMhTCUkkvNeg/exec";
+
+async function submitToSheet(data) {
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return true;
+  } catch(err) {
+    console.error('Sheet error:', err);
+    return false;
+  }
 }
 
-function handleContact() {
+// Early Access Form Handler
+async function handleEarlyAccess() {
+  const btn = document.querySelector('.btn-submit');
+  const company = document.getElementById('ea-company').value.trim();
+  const contact = document.getElementById('ea-contact').value.trim();
+  const country = document.getElementById('ea-country').value.trim();
+  const email = document.getElementById('ea-email').value.trim();
+  const phone = document.getElementById('ea-phone').value.trim();
+  const role = document.getElementById('ea-role').value.trim();
+  const category = document.getElementById('ea-category').value.trim();
+
+  // Basic validation
+  if (!company || !email) {
+    alert('Please fill in at least Company Name and Email.');
+    return;
+  }
+
+  // Show loading state
+  btn.textContent = 'Submitting…';
+  btn.disabled = true;
+
+  const data = {
+    companyName: company,
+    contactPerson: contact,
+    country: country,
+    email: email,
+    phone: phone,
+    role: role,
+    productCategory: category,
+    source: 'Early Access Form'
+  };
+
+  await submitToSheet(data);
+
+  // Show success
+  btn.textContent = 'Request Early Access →';
+  btn.disabled = false;
+  document.getElementById('earlySuccess').style.display = 'block';
+
+  // Clear form
+  ['ea-company','ea-contact','ea-country','ea-email','ea-phone','ea-category'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('ea-role').selectedIndex = 0;
+
+  setTimeout(() => document.getElementById('earlySuccess').style.display = 'none', 6000);
+}
+
+// Contact Form Handler
+async function handleContact() {
+  const btn = document.querySelector('.btn-contact');
+  const name = document.getElementById('ct-name').value.trim();
+  const company = document.getElementById('ct-company').value.trim();
+  const email = document.getElementById('ct-email').value.trim();
+  const phone = document.getElementById('ct-phone').value.trim();
+  const country = document.getElementById('ct-country').value.trim();
+  const enquiry = document.getElementById('ct-enquiry').value.trim();
+  const message = document.getElementById('ct-message').value.trim();
+
+  // Basic validation
+  if (!name || !email) {
+    alert('Please fill in at least your Name and Email.');
+    return;
+  }
+
+  // Show loading state
+  btn.textContent = 'Sending…';
+  btn.disabled = true;
+
+  const data = {
+    companyName: company,
+    contactPerson: name,
+    country: country,
+    email: email,
+    phone: phone,
+    role: enquiry,
+    productCategory: message,
+    source: 'Contact Form'
+  };
+
+  await submitToSheet(data);
+
+  // Show success
+  btn.textContent = 'Send Message →';
+  btn.disabled = false;
   document.getElementById('contactSuccess').style.display = 'block';
-  setTimeout(() => document.getElementById('contactSuccess').style.display = 'none', 5000);
+
+  // Clear form
+  ['ct-name','ct-company','ct-email','ct-phone','ct-country','ct-message'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  setTimeout(() => document.getElementById('contactSuccess').style.display = 'none', 6000);
 }
 
 // Smooth active nav highlight
